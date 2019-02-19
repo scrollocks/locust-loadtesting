@@ -1,0 +1,76 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: default
+  name: locust-master-deployment
+  labels:
+    name: locust
+    role: master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: locust
+      role: master
+  template:
+    metadata:
+      labels:
+        name: locust
+        role: master
+    spec:
+      containers:
+        - name: locust
+          image: asia.gcr.io/<PROJECT_ID>/locust:latest
+          imagePullPolicy: Always
+          env:
+            - name: LOCUST_MODE
+              value: master
+            - name: LOCUST_LOG_LEVEL
+              value: DEBUG
+            - name: LOCUST_TARGET_HOST
+              value: https://<PROJECT_ID>.appspot.com
+          ports:
+            - name: loc-master-web
+              containerPort: 8089
+              protocol: TCP
+            - name: loc-master-p1
+              containerPort: 5557
+              protocol: TCP
+            - name: loc-master-p2
+              containerPort: 5558
+              protocol: TCP
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: default
+  name: locust-worker-deployment
+  labels:
+    name: locust
+    role: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: locust
+      role: worker
+  template:
+    metadata:
+      labels:
+        name: locust
+        role: worker
+    spec:
+      containers:
+        - name: locust
+          image: asia.gcr.io/<PROJECT_ID>/locust:latest
+          imagePullPolicy: Always
+          env:
+            - name: LOCUST_MODE
+              value: worker
+            - name: LOCUST_MASTER
+              value: locust-master-service
+            - name: LOCUST_LOG_LEVEL
+              value: DEBUG
+            - name: LOCUST_TARGET_HOST
+              value: https://<PROJECT_ID>.appspot.com
